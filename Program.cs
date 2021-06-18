@@ -2,12 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using Newtonsoft.Json;
 
-namespace typetracker
+namespace Typetracker
 {
     internal static class Program
     {
@@ -24,7 +23,7 @@ namespace typetracker
                 .ToDictionary(g => g.Key,
                     g => g.Select(typeDefinition => metadataReader.GetString(typeDefinition.Name)).ToList());
 
-            foreach (var kvp in newNamespaces)
+            foreach (var kvp in newNamespaces.OrderBy(k => k.Key))
             {
                 if (!namespaces.TryGetValue(kvp.Key, out var types))
                 {
@@ -32,8 +31,13 @@ namespace typetracker
                     namespaces[kvp.Key] = types;
                 }
 
-                foreach (var typeName in kvp.Value)
+                foreach (var typeName in kvp.Value.OrderBy(k => k))
                 {
+                    if (typeName.Contains("<"))
+                    {
+                        continue;
+                    }
+
                     if (!types.TryGetValue(typeName, out var type))
                     {
                         Console.WriteLine($"Found new type '{kvp.Key}.{typeName}'.");
